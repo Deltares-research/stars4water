@@ -36,8 +36,8 @@ The backend and frontend containers run on the **same host and the same Docker n
                 │          Postgres + PostGIS (:5432)             │
                 └────────────────────────────────────────────────┘
 
-    Migrations (pypgstac migrate + alembic upgrade head) run as the
-    `migrate` service on each deploy, before the backend starts.
+    Production startup does not run database migrations automatically.
+    Apply schema migrations separately when a deployment requires them.
 ```
 
 ## Compose file
@@ -55,13 +55,14 @@ cp ../fair-data-finder/backend/.env.example .env
 # append the frontend variables and edit secrets, DB_CONNECTION_URL, APP_DOMAIN, etc.
 
 export HARBOR_REGISTRY=<registry-host>
-export PROJECT_NAME=<backend-image-project-name>
+export BACKEND_FOLDER=<backend-image-name>
+export FRONTEND_FOLDER=<frontend-image-name>
 export IMAGE_TAG=<git-sha>
 docker compose -f docker-compose.prod.yml pull
 docker compose -f docker-compose.prod.yml up -d
 ```
 
-The `migrate` service runs `pypgstac migrate && alembic upgrade head` automatically and the backend waits for it to complete successfully.
+The production compose file starts only the backend and frontend services. It does not run `pypgstac migrate` or `alembic upgrade head`; run those commands separately from a controlled maintenance task after confirming the database backup/snapshot status.
 
 ## SSR requires a shared network
 
@@ -81,8 +82,8 @@ Consequences:
 
 Images are pulled from the registry set via `HARBOR_REGISTRY`:
 
-- `${HARBOR_REGISTRY}/fair-data-finder/backend:${IMAGE_TAG}`
-- `${HARBOR_REGISTRY}/fair-data-finder/frontend:${IMAGE_TAG}`
+- `${HARBOR_REGISTRY}/fair-data/${BACKEND_FOLDER}:${IMAGE_TAG}`
+- `${HARBOR_REGISTRY}/fair-data/${FRONTEND_FOLDER}:${IMAGE_TAG}`
 
 Built from the Dockerfiles' `production` / `run-prod` targets.
 

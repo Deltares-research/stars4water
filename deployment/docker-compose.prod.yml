@@ -2,8 +2,9 @@
 #
 # Required environment variables (set in your shell before running):
 #   export HARBOR_REGISTRY=<registry-host>
-#   export PROJECT_NAME=<backend-image-project-name>
-#   export IMAGE_TAG=<git-sha-or-tag>
+#   export BACKEND_FOLDER=<backend-image-name>
+#   export FRONTEND_FOLDER=<frontend-image-name>
+#   export IMAGE_TAG=<version-or-latest>
 #
 # Deploy:
 #   docker compose -f docker-compose.prod.yml pull
@@ -18,13 +19,16 @@
 
 
 services:
-  migrate:
-    image: ${HARBOR_REGISTRY}/fair-data/${BACKEND_FOLDER}:${IMAGE_TAG}
-    container_name: migrate
-    restart: "no"
-    env_file:
-      - ./.env
-    command: bash -c "pypgstac migrate && alembic upgrade head"
+  # Migrations are disabled for the current STARS4Water deployment because the
+  # production database is already prepared. Uncomment this service and the
+  # backend depends_on block below when schema migrations should run on deploy.
+  # migrate:
+  #   image: ${HARBOR_REGISTRY}/fair-data/${BACKEND_FOLDER}:${IMAGE_TAG}
+  #   container_name: migrate
+  #   restart: "no"
+  #   env_file:
+  #     - ./.env
+  #   command: bash -c "pypgstac migrate && alembic upgrade head"
 
   backend:
     image: ${HARBOR_REGISTRY}/fair-data/${BACKEND_FOLDER}:${IMAGE_TAG}
@@ -34,9 +38,9 @@ services:
       - ./.env
     ports:
       - "8000:8000"
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
+    # depends_on:
+    #   migrate:
+    #     condition: service_completed_successfully
 
   frontend:
     image: ${HARBOR_REGISTRY}/fair-data/${FRONTEND_FOLDER}:${IMAGE_TAG}
