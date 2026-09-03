@@ -15,13 +15,11 @@
 #   NUXT_INTERNAL_API_BASE_URL=http://backend:8000/api   # server-only, SSR
 #   NUXT_PUBLIC_MAPBOX_TOKEN=pk....                      # visible in devtools
 #   NUXT_PUBLIC_ABOUT_TAB_ENABLED=true
-#
-# Browser traffic never reaches Nuxt on /api: nginx terminates TLS and routes
-# / to the frontend and /api to the backend.
+
 
 services:
   migrate:
-    image: ${HARBOR_REGISTRY}/fair-data/${PROJECT_NAME}:${IMAGE_TAG}
+    image: ${HARBOR_REGISTRY}/fair-data/${BACKEND_FOLDER}:${IMAGE_TAG}
     container_name: migrate
     restart: "no"
     env_file:
@@ -29,7 +27,7 @@ services:
     command: bash -c "pypgstac migrate && alembic upgrade head"
 
   backend:
-    image: ${HARBOR_REGISTRY}/fair-data/${PROJECT_NAME}:${IMAGE_TAG}
+    image: ${HARBOR_REGISTRY}/fair-data/${BACKEND_FOLDER}:${IMAGE_TAG}
     container_name: backend
     restart: unless-stopped
     env_file:
@@ -41,7 +39,7 @@ services:
         condition: service_completed_successfully
 
   frontend:
-    image: ${HARBOR_REGISTRY}/fair-data-finder/frontend:${IMAGE_TAG:-latest}
+    image: ${HARBOR_REGISTRY}/fair-data/${FRONTEND_FOLDER}:${IMAGE_TAG}
     container_name: frontend
     restart: unless-stopped
     env_file:
@@ -56,5 +54,3 @@ services:
       timeout: 10s
       retries: 3
       start_period: 20s
-    # Production CMD comes from the Dockerfile `run-prod` target:
-    #   node .output/server/index.mjs
