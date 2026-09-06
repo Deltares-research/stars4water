@@ -8,7 +8,10 @@ import { bboxPolygon } from '@turf/turf'
 import dateFormat from 'dateformat'
 /**
  * Build a text "OR" filter over many fields using SQL-like LIKE semantics.
- * Empty string becomes '%%' to match anything.
+ *
+ * Returns ``undefined`` when no query text is given so that ``buildFilter``
+ * drops the block: an unfiltered search must omit ``filter`` entirely rather
+ * than send a catch-all ``%%`` pattern.
  *
  * Example output shape:
  * {
@@ -21,10 +24,13 @@ import dateFormat from 'dateformat'
  * }
  *
  * @param {string} [q=''] - The query text.
- * @returns {{op:'or', args: Array<{op:'like', args:[{property:string}, string]}>}}
+ * @returns {{op:'or', args: Array<{op:'like', args:[{property:string}, string]}>} | undefined}
  */
 export function textFilter(q = '') {
-  const likeValue = q === '' ? '%%' : `%${ q }%`
+  const query = typeof q === 'string' ? q.trim() : ''
+  if (query === '') return undefined
+
+  const likeValue = `%${ query }%`
   return {
     op: 'or',
     args: SEARCH_PROPS.map((property) => ({
@@ -81,12 +87,16 @@ export function geometryFilter(bbox, { includeEmptyGeometry = false } = {}) {
  * Keywords filter.
  * Expects keyword IDs and targets properties.keywords.id.
  *
+ * ``properties.keywords`` is an array of keyword objects, so this uses the
+ * CQL2 array operator ``a_overlaps`` (matches when the item carries any of
+ * the selected keywords) rather than the scalar ``in`` operator.
+ *
  * @param {string[]|number[]} keywords
- * @returns {{op:'in', args:[{property:string}, (string[]|number[])]} | undefined}
+ * @returns {{op:'a_overlaps', args:[{property:string}, (string[]|number[])]} | undefined}
  */
 export function keywordsFilter(keywords) {
   if (!Array.isArray(keywords) || keywords.length === 0) return undefined
-  return { op: 'in', args: [ { property: 'properties.keywords.id' }, keywords ] }
+  return { op: 'a_overlaps', args: [ { property: 'properties.keywords.id' }, keywords ] }
 }
 
 /**
