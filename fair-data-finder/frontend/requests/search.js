@@ -16,11 +16,19 @@ import searchBody from '@/utils/search/searchBody.js'
  * @param {Array} searchParams.bbox - Bounding box
  * @param {number} searchParams.limit - Result limit
  * @param {string} searchParams.token - Pagination token
+ * @param {Function} [$api] - openFetch client captured synchronously by the
+ *   caller. Pass this explicitly whenever the call happens after an `await`
+ *   (e.g. inside useAsyncData handlers or store actions): Nuxt only restores
+ *   the composable context automatically around awaits written directly in
+ *   a <script setup> block, so calling useNuxtApp() here would silently
+ *   throw once resumed from a prior await, be swallowed by the caller's
+ *   try/catch, and result in no request ever being sent.
+ *   See https://nuxt.com/docs/guide/concepts/auto-imports#vue-and-nuxt-composables
  * @returns {Promise<Object>} Search results
  */
-export async function searchItems(searchParams = {}) {
-  const { $api } = useNuxtApp()
-  
+export async function searchItems(searchParams = {}, $api = null) {
+  const api = $api || useNuxtApp().$api
+
   try {
     const body = {
       ...searchBody({
@@ -39,7 +47,12 @@ export async function searchItems(searchParams = {}) {
       body.token = searchParams.token
     }
 
-    const data = await $api('/search', {
+    // credentials/cookie forwarding for SSR is handled globally by the
+    // openFetch plugin (plugins/openFetch.ts); it captures the request
+    // cookie synchronously at plugin setup time, so it does not need to be
+    // re-read here (which would be another composable call unsafe to make
+    // after an await).
+    const data = await api('/search', {
       method: 'POST',
       body,
       credentials: 'include',
@@ -55,4 +68,3 @@ export async function searchItems(searchParams = {}) {
     throw error
   }
 }
-

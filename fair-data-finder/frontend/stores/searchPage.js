@@ -58,7 +58,10 @@ export const useSearchPageStore = defineStore('searchPage', () => {
 
 
   //Functions
-  async function search(limit = 1000) {
+  // $api: optional openFetch client captured synchronously by the caller
+  // before any `await` (see requests/search.js for why this must be passed
+  // explicitly rather than resolved here via useNuxtApp()).
+  async function search(limit = 1000, $api = null) {
     // Get selected collections (collections that are marked as selected)
     const selected = (collections.value || []).filter(c => c.selected)
     const selectedIds = selected.map(c => c.id)
@@ -80,7 +83,7 @@ export const useSearchPageStore = defineStore('searchPage', () => {
         includeEmptyGeometry: includeEmptyGeometry.value,
         bbox: bboxFilter.value,
         limit: limit,
-      })
+      }, $api)
 
       // Mark features that have no geometry (null geometry = no spatial extent)
       if (data && data.features && Array.isArray(data.features)) {
@@ -99,7 +102,7 @@ export const useSearchPageStore = defineStore('searchPage', () => {
       }
 
       featureCollection.value = data
-      totalMatched.value = data?.numMatched || 0
+      totalMatched.value = data?.numberMatched ?? data?.numberReturned ?? data?.features?.length ?? 0
       searchStatus.value = 'success'
       
     } catch (e) {
@@ -146,5 +149,4 @@ export const useSearchPageStore = defineStore('searchPage', () => {
   return { q, startDate, endDate, keywords, collections, includeEmptyGeometry, bbox, bboxFilter, featureCollection, featureCollectionWithGeometry, totalMatched, searchStatus, searchError, selectedFeatureId, selectedFeatureBbox, areaDrawMode, search, fetchCollections, setSelectedFeature, setSelectedFeatureBbox, clearSelectedFeature, fetchKeywords }
 
 })
-
 
