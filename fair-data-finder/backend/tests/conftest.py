@@ -26,6 +26,7 @@ from api.database.models import (  # type: ignore
     User,
 )
 from api.extensions.keywords.keyword_extension import KeywordExtension
+from api.extensions.topics.topic_extension import TopicExtension
 from httpx import ASGITransport, AsyncClient
 from stac_fastapi.api.models import create_get_request_model, create_post_request_model
 from stac_fastapi.extensions.third_party import BulkTransactionExtension
@@ -103,6 +104,7 @@ async def app(db_engine):
         TokenPaginationExtension(),
         search_filter_extension,
         KeywordExtension(db_engine=db_engine),
+        TopicExtension(),
         SSOAuthExtension(
             settings=settings,
             sso_client=MicrosoftSSO(

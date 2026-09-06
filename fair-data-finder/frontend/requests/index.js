@@ -4,6 +4,7 @@
  */
 export * from './collections'
 export * from './keywords'
+export * from './topics'
 export * from './items'
 export * from './search'
 

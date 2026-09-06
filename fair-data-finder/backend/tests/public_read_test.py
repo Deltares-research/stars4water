@@ -11,6 +11,7 @@ from api.extensions.core.sso_auth_extension import (
 )
 from api.extensions.keywords.keyword_extension import KeywordExtension
 from api.extensions.rbac.rbac_extension import RBACExtension
+from api.extensions.topics.topic_extension import TopicExtension
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from fastapi_sso import MicrosoftSSO
@@ -67,6 +68,7 @@ async def _build_app(db_engine, login_enabled: bool):
         TokenPaginationExtension(),
         search_filter_extension,
         KeywordExtension(db_engine=db_engine),
+        TopicExtension(),
         RBACExtension(),
         SSOAuthExtension(
             settings=settings,
@@ -180,6 +182,7 @@ async def test_write_and_rbac_endpoints_keep_login_dependency(
         "/keywords",
         "/keywordgroups",
         "/facilities",
+        "/topics",
         "/_mgmt/ping",
     ],
 )

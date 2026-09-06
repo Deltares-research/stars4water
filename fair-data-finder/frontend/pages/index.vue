@@ -178,6 +178,7 @@
   store.startDate = q.start || undefined
   store.endDate = q.end || undefined
   store.keywords = toArr(q.keywords)
+  store.topics = toArr(q.topics)
   // If URL has includeEmptyGeometry parameter, use it; otherwise keep default (false)
   if (q.includeEmptyGeometry !== undefined) {
     store.includeEmptyGeometry = q.includeEmptyGeometry === 'on'
@@ -188,7 +189,7 @@
   // independent, so they run in parallel; the search depends on the selection
   // state derived from them and therefore runs afterwards.
   await useAsyncData('index-initial-data', async () => {
-    await Promise.all([store.fetchCollections(), store.fetchKeywords()])
+    await Promise.all([store.fetchCollections(), store.fetchKeywords(), store.fetchTopics()])
 
     const ids = toArr(q.collections)
     if (ids.length > 0) {
@@ -206,6 +207,14 @@
       }))
     }
 
+    const topicIds = toArr(q.topics)
+    if (topicIds.length > 0) {
+      store.topics = store.topics.map(t => ({
+        ...t,
+        selected: topicIds.includes(t.id)
+      }))
+    }
+
     if (canAccess.value) {
       await store.search(500, $api)
     }
@@ -219,7 +228,7 @@
   }
 
   watch(
-    () => [store.q, store.startDate, store.endDate, store.keywords, store.collections, store.includeEmptyGeometry, store.bboxFilter, canAccess.value],
+    () => [store.q, store.startDate, store.endDate, store.keywords, store.collections, store.topics, store.includeEmptyGeometry, store.bboxFilter, canAccess.value],
     () => {
       if (canAccess.value) {
         store.search(1000)

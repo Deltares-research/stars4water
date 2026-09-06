@@ -146,6 +146,50 @@
               </v-autocomplete>
             </v-col>
 
+            <!-- Topic -->
+            <v-col
+              cols="12"
+              md="4"
+              class="filter-col"
+            >
+              <div class="text-subtitle-2 mb-2">
+                Topic
+              </div>
+              <v-autocomplete
+                v-model="selectedTopic"
+                :items="store.topics"
+                item-title="name"
+                item-value="id"
+                return-object
+                multiple
+                chips
+                prepend-inner-icon="mdi-magnify"
+                placeholder="Search topic..."
+                variant="outlined"
+                density="compact"
+                clearable
+                hide-details
+                class="filter-autocomplete"
+                @update:model-value="handleTopicChange"
+              >
+                <template #item="{ props: itemProps, item }">
+                  <v-list-item v-bind="itemProps">
+                    <template #prepend>
+                      <v-list-item-action>
+                        <v-icon v-if="item.raw.selected" color="primary">
+                          mdi-check
+                        </v-icon>
+                      </v-list-item-action>
+                    </template>
+                    <!-- Remove the v-list-item-title since item-title="name" already handles it -->
+                  </v-list-item>
+                </template>
+                <template #selection="{ item }">
+                  {{ item.raw.name || item.raw.id }}
+                </template>
+              </v-autocomplete>
+            </v-col>
+
             <!-- Start & End date (buttons open date pickers) -->
             <v-col
               cols="12"
@@ -364,6 +408,36 @@
     }
   }
 
+  const selectedTopic = computed({
+    get: () => {
+      const selected = store.topics.filter(t => t.selected)
+      return selected
+    },
+    set: (value) => {
+      if (!value || value.length === 0) {
+        store.topics = store.topics.map(t => ({ ...t, selected: false }))
+      } else {
+        const selectedIds = value.map(v => v.id)
+        store.topics = store.topics.map(t => ({
+          ...t,
+          selected: selectedIds.includes(t.id)
+        }))
+      }
+    },
+  })
+
+  function handleTopicChange(value) {
+    if (!value || value.length === 0) {
+      store.topics = store.topics.map(t => ({ ...t, selected: false }))
+    } else {
+      const selectedIds = value.map(v => v.id)
+      store.topics = store.topics.map(t => ({
+        ...t,
+        selected: selectedIds.includes(t.id)
+      }))
+    }
+  }
+
   /* --- Date menus state --- */
   const startMenu = ref(false)
   const endMenu = ref(false)
@@ -386,6 +460,7 @@
     store.q = ''
     store.collections = store.collections.map(c => ({ ...c, selected: false }))
     store.keywords = store.keywords.map(k => ({ ...k, selected: false }))
+    store.topics = store.topics.map(t => ({ ...t, selected: false }))
     store.startDate = undefined
     store.endDate = undefined
     store.includeEmptyGeometry = false
@@ -408,6 +483,11 @@
       store.keywords = store.keywords.map(k => 
         k.id === keywordId ? { ...k, selected: false } : k
       )
+    } else if (key.startsWith('topic-')) {
+      const topicId = key.replace('topic-', '')
+      store.topics = store.topics.map(t =>
+        t.id === topicId ? { ...t, selected: false } : t
+      )
     } else if (key === 'includeEmptyGeometry') {
       store.includeEmptyGeometry = false
     } else if (key === 'area') {
@@ -420,6 +500,7 @@
     query: 'Search',
     collection: 'Domain',
     keyword: 'Keyword',
+    topic: 'Topic',
     startDate: 'Start date',
     endDate: 'End date',
     includeEmptyGeometry: 'Include empty geometry',
@@ -467,6 +548,17 @@
           key: `keyword-${keyword.id}`, 
           label: FIELD_LABEL.keyword, 
           value: keyword.nl_keyword || keyword.en_keyword || keyword.id 
+        })
+      })
+    }
+    
+    if (store.topics && store.topics.length > 0) {
+      const selectedTopics = store.topics.filter(t => t.selected)
+      selectedTopics.forEach(topic => {
+        chips.push({
+          key: `topic-${topic.id}`,
+          label: FIELD_LABEL.topic,
+          value: topic.name || topic.id
         })
       })
     }

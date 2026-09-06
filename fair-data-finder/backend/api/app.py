@@ -33,6 +33,7 @@ from api.extensions.core.sso_auth_extension import (
 )
 from api.extensions.keywords.keyword_extension import KeywordExtension
 from api.extensions.rbac.rbac_extension import RBACExtension
+from api.extensions.topics.topic_extension import TopicExtension
 
 
 Settings.set(APISettings())
@@ -57,6 +58,7 @@ extensions = [
     TokenPaginationExtension(),
     search_filter_extension,
     KeywordExtension(db_engine=db_engine),
+    TopicExtension(),
 ]
 
 extensions.append(RBACExtension())

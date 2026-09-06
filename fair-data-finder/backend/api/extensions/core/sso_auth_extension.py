@@ -51,6 +51,8 @@ PUBLIC_READ_ENDPOINTS: List[Scope] = [
     {"path": "/keywordgroup/{keywordgroup_id}", "method": "GET"},
     {"path": "/facilities", "method": "GET"},
     {"path": "/facility/{facility_id}", "method": "GET"},
+    # Topic extension reads, used by the search filters
+    {"path": "/topics", "method": "GET"},
 ]
 
 

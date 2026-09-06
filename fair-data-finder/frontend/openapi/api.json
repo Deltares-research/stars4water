@@ -5336,6 +5336,31 @@
           }
         }
       }
+    },
+    "/topics": {
+      "get": {
+        "tags": [
+          "Topics"
+        ],
+        "summary": "Get Topics",
+        "description": "Get aggregated topics with counts.\n\nReturns:\n    dict: JSON response with topics and their counts",
+        "operationId": "Get_Topics_topics_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ]
+      }
     }
   },
   "components": {
