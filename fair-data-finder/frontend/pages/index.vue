@@ -149,7 +149,7 @@
   import { computed, watch, ref } from 'vue'
   import { useSearchPageStore } from '~/stores/searchPage'
   import { useRoute } from 'vue-router'
-  import { useAsyncData } from '#app'
+  import { useAsyncData, useNuxtApp } from '#app'
   import { useAuth } from '~/composables/useAuth'
   import { useConfigStore } from '~/stores/config'
   import FeatureFilters from '@/components/FeatureFilters.vue'
@@ -157,6 +157,15 @@
 
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const configStore = useConfigStore()
+
+  // Captured synchronously (before any await) so it can be threaded through
+  // to store.search() inside the useAsyncData handler below. Composables
+  // like useNuxtApp() are only guaranteed to work when called before an
+  // await; calling them again after the Promise.all(...) await further down
+  // silently throws during SSR and is swallowed by store.search()'s
+  // try/catch, which is why the very first authenticated page load never
+  // issued a /api/search request.
+  const { $api } = useNuxtApp()
 
   const canAccess = computed(() => !configStore.authEnabled || isAuthenticated.value)
 
@@ -198,7 +207,7 @@
     }
 
     if (canAccess.value) {
-      await store.search(500)
+      await store.search(500, $api)
     }
 
     return true
