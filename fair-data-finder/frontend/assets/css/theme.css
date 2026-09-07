@@ -6,6 +6,12 @@
  * only appearance.
  */
 
+/* Barlow: same typeface used across stars4water.eu (see nuxt.config.ts for
+   the Google Fonts <link> that loads it). */
+.v-application {
+  font-family: 'Barlow', sans-serif !important;
+}
+
 :root {
   --s4w-background: #F8FAFC;
   --s4w-surface: #FFFFFF;
@@ -70,6 +76,15 @@
   color: inherit;
 }
 
+/* LinkedIn / contact icon buttons: same white-on-blue treatment as the
+   Login/Logout text buttons above. */
+.v-app-bar .v-btn--icon {
+  color: #FFFFFF !important;
+}
+.v-app-bar .v-btn--icon:hover {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+}
+
 /* Vuetify only sets v-main's padding-top (to clear the fixed v-app-bar) via
    an inline style once its layout system mounts on the client. Until then -
    during SSR and for a brief moment after hydration - v-main has no offset,
@@ -80,6 +95,23 @@
    once it is applied. */
 .v-main {
   padding-top: 64px !important;
+}
+
+/* Same issue as v-main above: Vuetify's layout system only applies the
+   app-bar's own position/height (via inline styles) once it mounts on the
+   client. Until then - during SSR and briefly after hydration - the bar (and
+   the logo inside it) has no fixed positioning/sizing, so it visually pops
+   in after already-visible page content (e.g. the map). This fallback
+   matches Vuetify's default app-bar height and keeps it pinned to the top
+   from first paint; Vuetify's inline style (higher specificity) still wins
+   once it is applied. */
+.v-app-bar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 64px !important;
+  z-index: 1005;
 }
 
 /* Buttons: rounded corners and a smooth hover transition everywhere */

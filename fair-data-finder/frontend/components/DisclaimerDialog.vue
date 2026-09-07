@@ -6,8 +6,15 @@
     max-width="700"
   >
     <v-card>
-      <v-card-title class="text-h6">
-        Disclaimer
+      <v-card-title class="d-flex flex-column align-center pt-4">
+        <v-img
+          src="/images/about/stars4water-logo.png"
+          alt="STARS4Water"
+          height="40"
+          width="40"
+          class="flex-grow-0 mb-2"
+        />
+        <span class="text-h6">Disclaimer</span>
       </v-card-title>
       <v-divider />
       <v-card-text

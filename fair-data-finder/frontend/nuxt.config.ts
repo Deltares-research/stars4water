@@ -7,6 +7,19 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
 
+  // Barlow is the font used by stars4water.eu; loaded here (rather than
+  // self-hosted) to match how the rest of the app already pulls in
+  // third-party CSS (see mapbox-gl below).
+  app: {
+    head: {
+      link: [
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap' },
+      ],
+    },
+  },
+
   css: ['mapbox-gl/dist/mapbox-gl.css', '~/assets/css/theme.css'],
   build: {
     transpile: ['vuetify'],
