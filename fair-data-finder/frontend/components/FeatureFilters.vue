@@ -181,7 +181,9 @@
                         </v-icon>
                       </v-list-item-action>
                     </template>
-                    <!-- Remove the v-list-item-title since item-title="name" already handles it -->
+                    <v-list-item-subtitle>
+                      {{ item.raw.count }} datasets
+                    </v-list-item-subtitle>
                   </v-list-item>
                 </template>
                 <template #selection="{ item }">
