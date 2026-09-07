@@ -7,7 +7,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
 
-  css: ['mapbox-gl/dist/mapbox-gl.css'],
+  css: ['mapbox-gl/dist/mapbox-gl.css', '~/assets/css/theme.css'],
   build: {
     transpile: ['vuetify'],
   },

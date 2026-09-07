@@ -1,0 +1,135 @@
+/*
+ * STARS4Water visual theme.
+ *
+ * These rules restyle existing Vuetify components (colors, borders, spacing)
+ * to match the STARS4Water palette. No markup/layout is changed here -
+ * only appearance.
+ */
+
+:root {
+  --s4w-background: #F8FAFC;
+  --s4w-surface: #FFFFFF;
+  --s4w-primary: #005AA9;
+  --s4w-primary-hover: #004A8C;
+  --s4w-accent: #27B6D6;
+  --s4w-text: #1F2937;
+  --s4w-text-secondary: #64748B;
+  --s4w-border: #E2E8F0;
+}
+
+/* Cards / surfaces: subtle border instead of a drop shadow */
+.v-card {
+  box-shadow: none !important;
+  border: 1px solid var(--s4w-border) !important;
+  border-radius: 8px !important;
+  background-color: var(--s4w-surface);
+}
+
+/* A little extra breathing room between stacked cards and controls */
+.v-card-title,
+.v-card-text,
+.v-card-actions {
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.v-card-actions {
+  gap: 8px;
+}
+
+/* App bar: STARS4Water blue with white text/icons, like stars4water.eu */
+.v-app-bar {
+  box-shadow: none !important;
+  border-bottom: none !important;
+  background-color: var(--s4w-primary) !important;
+  color: #FFFFFF !important;
+}
+
+/* Search / About tabs: white text, brighter white when active, white
+   selection indicator (instead of the default primary-on-primary, which
+   would be invisible on the blue bar) */
+.v-app-bar .v-tab {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+.v-app-bar .v-tab--selected {
+  color: #FFFFFF !important;
+}
+.v-app-bar .v-tab__slider {
+  background-color: #FFFFFF !important;
+}
+
+/* Login/Logout buttons and icons in the app bar stay legible on the blue
+   background instead of the usual blue-on-blue text button styling. */
+.v-app-bar .v-btn--variant-text:not(.text-error) {
+  color: #FFFFFF !important;
+}
+.v-app-bar .v-btn--variant-text:not(.text-error):hover {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+}
+.v-app-bar .v-icon {
+  color: inherit;
+}
+
+/* Buttons: rounded corners and a smooth hover transition everywhere */
+.v-btn {
+  border-radius: 8px !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
+}
+
+/* Primary buttons: blue background, white text, darker blue on hover */
+.v-btn.bg-primary {
+  background-color: var(--s4w-primary) !important;
+}
+.v-btn.bg-primary:hover {
+  background-color: var(--s4w-primary-hover) !important;
+}
+
+/* Secondary buttons: white background, grey border, blue text, light grey
+   hover background. Error-colored outlined buttons (e.g. "Remove") keep
+   their red styling and are excluded. */
+.v-btn--variant-outlined:not(.text-error) {
+  background-color: var(--s4w-surface) !important;
+  border-color: var(--s4w-border) !important;
+  color: var(--s4w-primary) !important;
+}
+.v-btn--variant-outlined:not(.text-error):hover {
+  background-color: var(--s4w-background) !important;
+}
+
+/* Text buttons (Cancel, Clear filters, Login, ...) styled as clean links.
+   Error-colored text buttons (e.g. "Logout") keep their red styling. */
+.v-btn--variant-text:not(.text-error) {
+  color: var(--s4w-primary) !important;
+}
+.v-btn--variant-text:not(.text-error):hover {
+  background-color: rgba(0, 90, 169, 0.08) !important;
+}
+
+/* Replace grey text utilities with the STARS4Water secondary text colour */
+.text-grey,
+.text-grey-darken-1,
+.text-grey-darken-2,
+.text-grey-lighten-1 {
+  color: var(--s4w-text-secondary) !important;
+}
+
+/* Replace grey panel backgrounds with clean, near-white surfaces */
+.bg-grey-lighten-3,
+.bg-grey-lighten-4,
+.bg-grey-lighten-5 {
+  background-color: var(--s4w-background) !important;
+  border-bottom: 1px solid var(--s4w-border);
+}
+
+/* Links: cleaner styling instead of underlined blue text. Vuetify tabs and
+   buttons render as anchors too, but already have their own selected-state
+   indicator, so they are excluded to avoid a double underline on hover. */
+.v-application a:not(.v-tab):not(.v-btn):not(.v-chip) {
+  color: var(--s4w-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.v-application a:not(.v-tab):not(.v-btn):not(.v-chip):hover {
+  color: var(--s4w-primary-hover);
+  text-decoration: underline;
+}

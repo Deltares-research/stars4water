@@ -107,8 +107,7 @@
                     <div class="mb-3">
                       <NuxtLink
                         :to="`/register/${f.id}/view`"
-                        class="text-body-2 text-primary"
-                        style="text-decoration: underline; cursor: pointer;"
+                        class="text-body-2 view-details-link"
                       >
                         View details
                       </NuxtLink>
@@ -335,6 +334,16 @@
 .selected-feature {
   border: 2px solid rgb(var(--v-theme-primary));
   background-color: rgba(var(--v-theme-primary), 0.05);
+}
+
+/* Clean, modern link styling instead of an underlined text link */
+.view-details-link {
+  color: rgb(var(--v-theme-primary));
+  text-decoration: none;
+  font-weight: 500;
+}
+.view-details-link:hover {
+  text-decoration: underline;
 }
 </style>
 
