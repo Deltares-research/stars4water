@@ -33,6 +33,7 @@
     <v-main>
       <slot /> 
     </v-main>
+    <DisclaimerDialog />
   </v-app>
 </template>
 
@@ -40,6 +41,7 @@
 
   import { useAuth } from '~/composables/useAuth'
   import { useConfigStore } from '~/stores/config'
+  import DisclaimerDialog from '~/components/DisclaimerDialog.vue'
 
   const { login, isLoading } = useAuth()
   const configStore = useConfigStore()

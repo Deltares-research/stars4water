@@ -75,12 +75,14 @@
     <v-main>
       <slot />
     </v-main>
+    <DisclaimerDialog />
   </v-app>
 </template>
 
 <script setup>
   import { useAuth } from '~/composables/useAuth'
   import { useConfigStore } from '~/stores/config'
+  import DisclaimerDialog from '~/components/DisclaimerDialog.vue'
 
   const { 
     isAuthenticated, 
