@@ -9,11 +9,10 @@
       @mb-created="onMapCreated"
       @mb-click="onMapClick"
     >
-      <!-- Points: clustered marker layer -->
       <MapboxCluster
-        v-if="pointFeatures && imageLoaded"
+        v-if="searchMapPointFeatures && imageLoaded"
         :key="clusterKey"
-        :data="pointFeatures"
+        :data="searchMapPointFeatures"
         :cluster-max-zoom="14"
         :cluster-radius="50"
         :cluster-min-points="2"
@@ -25,14 +24,6 @@
         :cluster-count-paint="clusterCountPaint"
         @mb-feature-click="onFeatureClicked"
         @mb-cluster-click="onClusterClicked"
-      />
-
-      <!-- Polygons and lines: layers built by build-geojson-layer.js -->
-      <MapboxLayer
-        v-for="layer in mapLayers"
-        :key="layer.id"
-        :id="layer.id"
-        :options="layer"
       />
     
       <MapControlsZoom
@@ -75,9 +66,9 @@
 </template>
 
 <script setup>
-  import { ref, computed, watch, nextTick, onUnmounted } from 'vue'
+  import { ref, computed, watch, nextTick } from 'vue'
   import { useRuntimeConfig } from '#app'
-  import { MapboxMap, MapboxCluster, MapboxNavigationControl, MapboxLayer } from '@studiometa/vue-mapbox-gl'
+  import { MapboxMap, MapboxCluster, MapboxNavigationControl } from '@studiometa/vue-mapbox-gl'
   import { center, bbox } from '@turf/turf'
   import { isEqual } from 'lodash-es'
   import { useSearchPageStore } from '~/stores/searchPage'
@@ -93,11 +84,6 @@
     clusterCountLayout,
     clusterCountPaint
   } from '~/utils/mapbox-cluster-config'
-  import buildGeoJsonLayer from '~/utils/build-geojson-layer'
-
-  const POINT_TYPES = new Set([ 'Point', 'MultiPoint' ])
-  const POLYGON_TYPES = new Set([ 'Polygon', 'MultiPolygon' ])
-  const LINE_TYPES = new Set([ 'LineString', 'MultiLineString' ])
 
   const mapInstance = ref(null)
   const accessToken = useRuntimeConfig().public.mapboxToken
@@ -118,33 +104,37 @@
   // Flag to prevent recursive updates
   const isClearingPolygon = ref(false)
 
-  // Split feature collection by geometry type for separate map layers
-  function filterByType (types) {
-    return computed(() => {
-      const fc = store.featureCollectionWithGeometry
-      if (!fc) return null
-      const features = fc.features.filter(f => f.geometry && types.has(f.geometry.type))
-      if (features.length === 0) return null
-      return { ...fc, features }
-    })
-  }
+  const searchMapPointFeatures = computed(() => {
+    const fc = store.featureCollectionWithGeometry
+    if (!fc) return null
 
-  const pointFeatures = filterByType(POINT_TYPES)
-  const polygonFeatures = filterByType(POLYGON_TYPES)
-  const lineFeatures = filterByType(LINE_TYPES)
+    const features = fc.features
+      .map(feature => {
+        if (!feature.geometry?.type) return null
 
-  // All non-point layers built by build-geojson-layer.js, keyed by timestamp so
-  // Vue unmounts/remounts them when search results change (avoids Mapbox GL
-  // "layer already added" errors).
-  const mapLayers = computed(() => {
-    const ts = layerTimestamp.value
-    return [
-      buildGeoJsonLayer(polygonFeatures.value),
-      buildGeoJsonLayer(lineFeatures.value),
-    ]
-      .flat()
+        if (feature.geometry.type === 'Point') {
+          return feature
+        }
+
+        try {
+          const centerPoint = center(feature)
+          return {
+            ...feature,
+            geometry: {
+              type: 'Point',
+              coordinates: centerPoint.geometry.coordinates,
+            },
+          }
+        } catch (error) {
+          console.error('Error calculating center for search map feature:', error)
+          return null
+        }
+      })
       .filter(Boolean)
-      .map(layer => ({ ...layer, id: `${layer.id}-${ts}` }))
+
+    if (features.length === 0) return null
+
+    return { ...fc, features }
   })
   
   // Check if polygon filter is active (bbox is not default)
@@ -213,8 +203,8 @@
         mapClickTimeout = null
       }
       
-      if (store.featureCollectionWithGeometry && store.featureCollectionWithGeometry.features) {
-        const feature = store.featureCollectionWithGeometry.features.find(f => f.id === newFeatureId)
+      if (searchMapPointFeatures.value?.features) {
+        const feature = searchMapPointFeatures.value.features.find(f => f.id === newFeatureId)
         if (feature) {
           selectedFeature.value = feature
           if (feature.bbox) {
@@ -225,7 +215,7 @@
     }
   )
   
-  // Timestamp that updates when featureCollectionWithGeometry changes — used as layer key
+  // Timestamp that updates when featureCollectionWithGeometry changes
   const layerTimestamp = ref(Date.now())
   
   watch(
@@ -236,38 +226,8 @@
     { deep: true }
   )
   
-  // Track cleanup functions for direct Mapbox GL click listeners on polygon/line layers.
-  // We bypass MapboxLayer's emit system because the component declares no `emits`, so
-  // emit('mb-click') falls through to the root <div> instead of calling the parent handler.
-  let layerClickCleanup = []
-
-  watch(
-    mapLayers,
-    (newLayers) => {
-      // Remove listeners registered for the previous set of layers
-      layerClickCleanup.forEach(fn => fn())
-      layerClickCleanup = []
-
-      if (!mapInstance.value || !newLayers.length) return
-
-      newLayers.forEach(layer => {
-        const handler = (event) => onLayerFeatureClicked(event)
-        mapInstance.value.on('click', layer.id, handler)
-        layerClickCleanup.push(() => {
-          mapInstance.value?.off('click', layer.id, handler)
-        })
-      })
-    },
-    { flush: 'post' }
-  )
-
-  onUnmounted(() => {
-    layerClickCleanup.forEach(fn => fn())
-    layerClickCleanup = []
-  })
-  
   const clusterKey = computed(() => {
-    if (!pointFeatures.value) return null
+    if (!searchMapPointFeatures.value) return null
     return `cluster-${layerTimestamp.value}`
   })
   
@@ -300,10 +260,10 @@
   })
 
   const bounds = computed(() => {
-    if (!store.featureCollectionWithGeometry) {
+    if (!searchMapPointFeatures.value) {
       return []
     }
-    const extent = geojsonBounds.extent(store.featureCollectionWithGeometry)
+    const extent = geojsonBounds.extent(searchMapPointFeatures.value)
     if (!extent || extent.length < 4) {
       return []
     }
@@ -314,7 +274,7 @@
     mapInstance.value = map
   }
 
-  // Shared feature-selection logic used by both cluster and layer click handlers
+  // Shared feature-selection logic used by map marker and card clicks
   async function selectFeature(featureId) {
     if (!featureId) {
       justClickedFeature.value = false
@@ -322,8 +282,8 @@
     }
 
     let matchedFeature = null
-    if (store.featureCollectionWithGeometry && store.featureCollectionWithGeometry.features) {
-      matchedFeature = store.featureCollectionWithGeometry.features.find(f => f.id === featureId)
+    if (searchMapPointFeatures.value?.features) {
+      matchedFeature = searchMapPointFeatures.value.features.find(f => f.id === featureId)
     }
 
     if (!matchedFeature) return
@@ -368,26 +328,6 @@
     await selectFeature(featureId)
   }
 
-  // Click handler for MapboxLayer (polygon / line layers)
-  async function onLayerFeatureClicked(event) {
-    if (isDrawingActive.value) return
-
-    if (mapClickTimeout) {
-      clearTimeout(mapClickTimeout)
-      mapClickTimeout = null
-    }
-
-    justClickedFeature.value = true
-
-    if (event?.originalEvent) {
-      event.originalEvent.stopPropagation()
-    }
-
-    const feature = event?.features?.[0]
-    const featureId = feature?.properties?.id || feature?.id
-    await selectFeature(featureId)
-  }
-  
   function onClusterClicked() {
     selectedFeature.value = null
     store.clearSelectedFeature()
