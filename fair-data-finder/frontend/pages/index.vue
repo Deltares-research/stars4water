@@ -89,17 +89,26 @@
                   </v-card-title>
 
                   <v-card-text>
-                    <p class="mb-3 line-clamp-3">
-                      {{ f.properties?.description || 'No description.' }}
-                    </p>
+                    <!-- eslint-disable-next-line vue/no-v-html -->
+                    <p
+                      class="mb-3 line-clamp-3"
+                      v-html="linkifyText(f.properties?.description || 'No description.')"
+                    />
 
                     <div class="d-flex align-center mb-3">
                       <v-icon class="mr-2" size="small">
                         mdi-link-variant
                       </v-icon>
-                      <span v-if="firstAssetHref(f)">
+                      <a
+                        v-if="firstAssetHref(f)"
+                        :href="firstAssetHref(f)"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-truncate flex-grow-1"
+                        style="min-width: 0;"
+                      >
                         {{ firstAssetHref(f) }}
-                      </span>
+                      </a>
                       <span v-else>—</span>
                     </div>
 
@@ -157,7 +166,7 @@
   import { useAuth } from '~/composables/useAuth'
   import { useConfigStore } from '~/stores/config'
   import FeatureFilters from '@/components/FeatureFilters.vue'
-  import { formatDate } from '~/utils/helpers'
+  import { formatDate, linkifyText } from '~/utils/helpers'
 
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const configStore = useConfigStore()

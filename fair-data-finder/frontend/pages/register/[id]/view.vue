@@ -228,8 +228,47 @@
                         {{ formatPropertyKey(prop.key) }}
                       </td>
                       <td>
+                        <!-- Contact: unfold into a small name/email/organization table -->
+                        <v-table
+                          v-if="isContactKey(prop.key)"
+                          density="compact"
+                          class="nested-table"
+                        >
+                          <thead>
+                            <tr>
+                              <th>Name</th>
+                              <th>Email</th>
+                              <th>Organization</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr
+                              v-for="(contact, idx) in normalizeContacts(prop.value)"
+                              :key="idx"
+                            >
+                              <td>{{ contact.name || '—' }}</td>
+                              <td>
+                                <a
+                                  v-if="contact.email"
+                                  :href="`mailto:${contact.email}`"
+                                  class="text-primary"
+                                >
+                                  {{ contact.email }}
+                                </a>
+                                <span v-else>—</span>
+                              </td>
+                              <td>{{ contact.organization || '—' }}</td>
+                            </tr>
+                          </tbody>
+                        </v-table>
+
+                        <!-- Topics (and similar array fields): comma-separated list instead of raw JSON -->
+                        <span v-else-if="Array.isArray(prop.value)" class="text-grey-darken-1">
+                          {{ formatList(prop.value) }}
+                        </span>
+
                         <a
-                          v-if="isUrl(prop.value)"
+                          v-else-if="isUrl(prop.value)"
                           :href="prop.value"
                           target="_blank"
                           rel="noopener noreferrer"
@@ -416,6 +455,42 @@
     }
   }
 
+  // Recognizes the STAC "contact"/"contacts" property (with or without a
+  // namespace prefix, e.g. "deltares:contact") so it can be unfolded into a
+  // name/email/organization table instead of raw JSON.
+  function isContactKey(key) {
+    return /(^|:)contacts?$/i.test(key)
+  }
+
+  // Normalizes a contact value (a single object or an array of them, in
+  // either the STAC "contacts" extension shape or a simpler flat shape) into
+  // a consistent { name, email, organization } list for display.
+  function normalizeContacts(value) {
+    const list = Array.isArray(value) ? value : [value]
+    return list.map((c) => {
+      if (!c || typeof c !== 'object') return { name: String(c), email: '', organization: '' }
+
+      let email = c.email
+      if (!email && Array.isArray(c.emails)) {
+        email = c.emails.map(e => (typeof e === 'object' ? e.value : e)).filter(Boolean).join(', ')
+      }
+
+      return {
+        name: c.name || '',
+        email: email || '',
+        organization: c.organization || c.organisation || '',
+      }
+    })
+  }
+
+  // Renders array-valued properties (e.g. "deltares:topics") as a simple
+  // comma-separated list instead of raw JSON.
+  function formatList(value) {
+    return value
+      .map(item => (typeof item === 'object' && item !== null ? (item.name || item.title || item.id || JSON.stringify(item)) : item))
+      .join(', ')
+  }
+
   async function copyToClipboard(text, assetKey) {
     try {
       await navigator.clipboard.writeText(text)
@@ -466,5 +541,14 @@
     width: 100%;
     height: 100%;
     min-height: 300px;
+  }
+
+  .nested-table {
+    background: transparent;
+  }
+  .nested-table :deep(th),
+  .nested-table :deep(td) {
+    padding: 4px 8px !important;
+    height: auto !important;
   }
 </style>

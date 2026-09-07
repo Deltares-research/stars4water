@@ -61,6 +61,33 @@ export function formatDate(feature) {
   return '—'
 }
 
+// Escapes HTML special characters so untrusted text can be safely rendered
+// via v-html after being run through linkifyText() below.
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
+// Wraps bare http(s) URLs found in plain text (e.g. dataset descriptions)
+// in clickable <a> tags. The rest of the text is HTML-escaped first so the
+// result is safe to render with v-html.
+export function linkifyText(text) {
+  if (!text) return ''
+
+  const urlRegex = /(https?:\/\/[^\s<]+)/g
+  return escapeHtml(text).replace(urlRegex, (url) => {
+    // Keep trailing punctuation (e.g. a sentence-ending period) outside the link
+    const trailingMatch = url.match(/[),.;:!?]+$/)
+    const trailing = trailingMatch ? trailingMatch[0] : ''
+    const cleanUrl = trailing ? url.slice(0, -trailing.length) : url
+    return `<a href="${ cleanUrl }" target="_blank" rel="noopener noreferrer">${ cleanUrl }</a>${ trailing }`
+  })
+}
+
 export function firstAssetHref(feature) {
   const assets = feature?.assets
   if (!assets) return null
