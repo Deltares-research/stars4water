@@ -70,6 +70,18 @@
   color: inherit;
 }
 
+/* Vuetify only sets v-main's padding-top (to clear the fixed v-app-bar) via
+   an inline style once its layout system mounts on the client. Until then -
+   during SSR and for a brief moment after hydration - v-main has no offset,
+   so page content (e.g. the search page's filters) renders underneath the
+   app bar and only jumps into place once Vuetify's JS runs. This fallback
+   matches the default app-bar height so content is positioned correctly
+   from first paint; Vuetify's inline style (higher specificity) still wins
+   once it is applied. */
+.v-main {
+  padding-top: 64px !important;
+}
+
 /* Buttons: rounded corners and a smooth hover transition everywhere */
 .v-btn {
   border-radius: 8px !important;
