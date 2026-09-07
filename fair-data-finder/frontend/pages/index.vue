@@ -177,8 +177,12 @@
   store.q = q.q || ''
   store.startDate = q.start || undefined
   store.endDate = q.end || undefined
-  store.keywords = toArr(q.keywords)
-  store.topics = toArr(q.topics)
+  // Note: store.keywords/store.topics are populated by fetchKeywords()/fetchTopics()
+  // inside useAsyncData below (server-side only, transferred via payload on
+  // hydration). Do not pre-assign them here: this code re-runs on the client
+  // during hydration, and since useAsyncData's cached result prevents the
+  // fetch from re-running client-side, an unconditional assignment here would
+  // permanently overwrite the hydrated data with an empty array.
   // If URL has includeEmptyGeometry parameter, use it; otherwise keep default (false)
   if (q.includeEmptyGeometry !== undefined) {
     store.includeEmptyGeometry = q.includeEmptyGeometry === 'on'

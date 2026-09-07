@@ -102,26 +102,17 @@ export function keywordsFilter(keywords) {
 /**
  * Topics filter.
  * Expects topic IDs and targets deltares:topics property.
- * Uses 'or' with '=' operators since deltares:topic is an array property.
+ * Uses the CQL2 array-overlap operator to match any selected topic.
  *
  * @param {string[]} topics
- * @returns {{op:'or', args:any[]} | undefined}
+ * @returns {{op:'a_overlaps', args:[{property:string}, string[]]} | undefined}
  */
 export function topicsFilter(topics) {
   if (!Array.isArray(topics) || topics.length === 0) return undefined
 
-  // If only one topic, return a simple equality check
-  if (topics.length === 1) {
-    return { op: 'like', args: [ { property: 'properties.deltares:topics' }, topics[0] ] }
-  }
-
-  // Multiple topics - use OR
   return {
-    op: 'or',
-    args: topics.map(topic => ({
-      op: 'like',
-      args: [ { property: 'properties.deltares:topics' }, topic ],
-    })),
+    op: 'a_overlaps',
+    args: [ { property: 'properties.deltares:topics' }, topics ],
   }
 }
 
