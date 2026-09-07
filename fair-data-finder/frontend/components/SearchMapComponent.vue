@@ -66,7 +66,7 @@
 </template>
 
 <script setup>
-  import { ref, computed, watch, nextTick } from 'vue'
+  import { ref, computed, watch, nextTick, onActivated } from 'vue'
   import { useRuntimeConfig } from '#app'
   import { MapboxMap, MapboxCluster, MapboxNavigationControl } from '@studiometa/vue-mapbox-gl'
   import { center, bbox } from '@turf/turf'
@@ -273,6 +273,14 @@
   function onMapCreated(map) {
     mapInstance.value = map
   }
+
+  // The Search page is kept alive (see app.vue), so this component is
+  // hidden rather than destroyed when navigating away. Its container has
+  // zero size while hidden, which leaves Mapbox's internal canvas size
+  // stale; resize() re-measures the container once it's visible again.
+  onActivated(() => {
+    mapInstance.value?.resize()
+  })
 
   // Shared feature-selection logic used by map marker and card clicks
   async function selectFeature(featureId) {
