@@ -74,7 +74,7 @@ frontend/
 ├── configuration/   App-level configuration files
 ├── content/         Static Markdown content served by the app
 ├── layouts/         Nuxt layout files
-├── pages/           Route pages (about, domains, groups, keywords, register, …)
+├── pages/           Route pages (about, domains, groups, register, …)
 ├── plugins/         Nuxt plugins
 ├── public/          Static assets
 ├── requests/        API request helpers

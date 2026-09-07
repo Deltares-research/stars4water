@@ -182,9 +182,9 @@
   store.q = q.q || ''
   store.startDate = q.start || undefined
   store.endDate = q.end || undefined
-  // Note: store.keywords/store.topics are populated by fetchKeywords()/fetchTopics()
+  // Note: store.topics is populated by fetchTopics()
   // inside useAsyncData below (server-side only, transferred via payload on
-  // hydration). Do not pre-assign them here: this code re-runs on the client
+  // hydration). Do not pre-assign it here: this code re-runs on the client
   // during hydration, and since useAsyncData's cached result prevents the
   // fetch from re-running client-side, an unconditional assignment here would
   // permanently overwrite the hydrated data with an empty array.
@@ -194,25 +194,17 @@
   }
 
   // Fetched once on the server and transferred via the Nuxt payload, so
-  // hydration does not repeat these requests. Collections and keywords are
+  // hydration does not repeat these requests. Collections and topics are
   // independent, so they run in parallel; the search depends on the selection
   // state derived from them and therefore runs afterwards.
   await useAsyncData('index-initial-data', async () => {
-    await Promise.all([store.fetchCollections(), store.fetchKeywords(), store.fetchTopics()])
+    await Promise.all([store.fetchCollections(), store.fetchTopics()])
 
     const ids = toArr(q.collections)
     if (ids.length > 0) {
       store.collections = store.collections.map(c => ({
         ...c,
         selected: ids.includes(c.id)
-      }))
-    }
-
-    const keywordIds = toArr(q.keywords)
-    if (keywordIds.length > 0) {
-      store.keywords = store.keywords.map(k => ({
-        ...k,
-        selected: keywordIds.includes(k.id)
       }))
     }
 
@@ -237,7 +229,7 @@
   }
 
   watch(
-    () => [store.q, store.startDate, store.endDate, store.keywords, store.collections, store.topics, store.includeEmptyGeometry, store.bboxFilter, canAccess.value],
+    () => [store.q, store.startDate, store.endDate, store.collections, store.topics, store.includeEmptyGeometry, store.bboxFilter, canAccess.value],
     () => {
       if (canAccess.value) {
         store.search(1000)
@@ -278,19 +270,13 @@
   // Filter options
   const filterOptions = computed(() => {
     const col = new Set()
-    const kw = new Set()
 
     features.value.forEach(f => {
       if (f.collection) col.add(f.collection)
-      const keywords = f.properties?.keywords || []
-      keywords.forEach(k => {
-        if (k?.en_keyword) kw.add(k.en_keyword)
-      })
     })
 
     return {
       collection: [...col].sort(sortAsc),
-      keyword: [...kw].sort(sortAsc),
     }
   })
 

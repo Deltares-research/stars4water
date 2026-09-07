@@ -31,14 +31,6 @@
                 class="mb-4"
               />
 
-              <v-select
-                v-model="formData.keywordsFacility"
-                :items="facilityOptions"
-                label="Keyword domains"
-                variant="outlined"
-                class="mb-4"
-              />
-
               <v-autocomplete
                 v-model="formData.selectedGroups"
                 :items="groupOptions"
@@ -135,7 +127,7 @@
   import { ref, computed, onMounted } from 'vue'
   import { useRouter } from 'vue-router'
   import { useNuxtApp } from '#app'
-  import { createCollection, fetchFacilities } from '~/requests/collections'
+  import { createCollection } from '~/requests/collections'
   import { fetchGroups } from '~/requests/groups'
 
   defineOptions({
@@ -149,27 +141,16 @@
   const formData = ref({
     title: '',
     description: '',
-    keywordsFacility: 'No keywords',
     selectedGroups: [],
     groupRoles: {} // { groupId: ['role1', 'role2'] }
   })
 
-  const facilities = ref([])
   const groups = ref([])
   const isLoadingGroups = ref(false)
   const isSubmitting = ref(false)
   const error = ref(null)
 
   // Computed
-  const facilityOptions = computed(() => {
-    const options = facilities.value
-      .filter(item => !!item.id)
-      .map(item => ({
-        value: item.id,
-        title: item.name
-      }))
-    return [{ value: 'No keywords', title: 'No keywords' }, ...options]
-  })
 
   const groupOptions = computed(() => {
     return groups.value.map(group => ({
@@ -244,16 +225,7 @@
             interval: [[null, null]],
           },
         },
-        links: formData.value.keywordsFacility !== 'No keywords'
-          ? [
-            {
-              rel: 'keywords',
-              href: '/facilities/' + formData.value.keywordsFacility,
-              type: 'application/json',
-              id: formData.value.keywordsFacility,
-            },
-          ]
-          : [],
+        links: [],
       }
 
       const result = await createCollection(collectionData)
@@ -296,16 +268,7 @@
 
   // Initialize
   onMounted(async () => {
-    try {
-      const [facilitiesData] = await Promise.all([
-        fetchFacilities(),
-        loadGroups()
-      ])
-      facilities.value = facilitiesData || []
-    } catch (err) {
-      console.error('Failed to fetch facilities:', err)
-      facilities.value = []
-    }
+    await loadGroups()
   })
 </script>
 

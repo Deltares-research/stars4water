@@ -10,7 +10,6 @@ import searchBody from '@/utils/search/searchBody.js'
  * @param {string} searchParams.q - Query string
  * @param {Date|string} searchParams.startDate - Start date
  * @param {Date|string} searchParams.endDate - End date
- * @param {Array} searchParams.keywords - Keywords array
  * @param {Array} searchParams.collections - Collection IDs array
  * @param {Array} searchParams.topics - Topic IDs array
  * @param {boolean} searchParams.includeEmptyGeometry - Include empty geometry
@@ -36,7 +35,6 @@ export async function searchItems(searchParams = {}, $api = null) {
         q: searchParams.q || '',
         startDate: searchParams.startDate,
         endDate: searchParams.endDate,
-        keywords: searchParams.keywords || [],
         collections: searchParams.collections || [],
         topics: searchParams.topics || [],
         includeEmptyGeometry: searchParams.includeEmptyGeometry || false,

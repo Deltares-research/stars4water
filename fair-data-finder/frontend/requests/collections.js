@@ -186,26 +186,3 @@ export async function deleteCollection(collectionId) {
   }
 }
 
-/**
- * Fetch facilities (for keywords dropdown)
- * @returns {Promise<Array>} Facilities array
- */
-export async function fetchFacilities() {
-  const { $api } = useNuxtApp()
-  
-  try {
-    const facilities = await $api('/facilities', {
-      credentials: 'include',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-    })
-    
-    return facilities || []
-  } catch (error) {
-    console.error('Failed to fetch facilities:', error?.message || error?.toString() || 'Unknown error')
-    throw error
-  }
-}
-

@@ -378,7 +378,7 @@
 
   const properties = computed(() => {
     if (!item.value?.properties) return []
-    const excluded = ['title', 'description', 'datetime', 'updated', 'created']
+    const excluded = ['title', 'description', 'datetime', 'updated', 'created', 'keywords']
     return Object.entries(item.value.properties)
       .filter(([key]) => !excluded.includes(key))
       .map(([key, value]) => ({ key, value }))
@@ -397,9 +397,6 @@
   }
 
   function formatValue(key, value) {
-    if (key === 'keywords' && Array.isArray(value)) {
-      return value.map(k => k.nl_keyword || k.en_keyword || JSON.stringify(k)).join(', ')
-    }
     if (key.includes('datetime') || key.includes('date')) {
       return formatDate(value) || String(value)
     }

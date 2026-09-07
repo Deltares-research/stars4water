@@ -61,7 +61,6 @@
                 :items="collectionOptions"
                 label="Domain"
                 variant="outlined"
-                @update:model-value="handleCollectionChange"
               />
             </v-card-text>
           </v-card>
@@ -350,58 +349,6 @@
             </v-card-text>
           </v-card>
 
-          <!-- Type of Origin -->
-          <v-card v-if="!isLoading && (mode === 'create' ? collections.length > 0 : true)" class="mb-4">
-            <v-card-title class="text-h6">
-              Type of Origin
-            </v-card-title>
-            <v-card-text>
-              <v-select
-                v-model="selectedFacilityType"
-                :items="facilityTypeOptions"
-                label="Filter by Type of Origin"
-                variant="outlined"
-                :disabled="!formData.collection"
-                @update:model-value="handleFacilityTypeChange"
-              />
-            </v-card-text>
-          </v-card>
-
-          <!-- Keywords -->
-          <v-card v-if="!isLoading && (mode === 'create' ? collections.length > 0 : true) && formData.collection && filteredKeywordsGroups.length > 0" class="mb-4">
-            <v-card-title class="text-h6">
-              Keywords
-            </v-card-title>
-            <v-card-text>
-              <v-row>
-                <v-col
-                  v-for="group in filteredKeywordsGroups"
-                  :key="group.id"
-                  cols="12"
-                  md="4"
-                >
-                  <v-card variant="outlined">
-                    <v-card-title class="text-subtitle-1">
-                      {{ group.group_name_en }}
-                    </v-card-title>
-                    <v-card-text>
-                      <v-checkbox
-                        v-for="keyword in group.keywords"
-                        :key="keyword.id"
-                        v-model="selectedKeywords"
-                        :value="keyword"
-                        :label="keyword.nl_keyword"
-                        density="compact"
-                        hide-details
-                        class="mb-1"
-                      />
-                    </v-card-text>
-                  </v-card>
-                </v-col>
-              </v-row>
-            </v-card-text>
-          </v-card>
-
           <!-- Storage Location Data Set -->
           <v-card v-if="!isLoading && (mode === 'create' ? collections.length > 0 : true)" class="mb-4">
             <v-card-title class="text-h6">
@@ -615,8 +562,7 @@
   import languageOptions from '~/configuration/languageOptions.json'
   import legalRestrictionsOptions from '~/configuration/legalRestrictionsOptions.json'
   import spatialReferenceSystemOptions from '~/configuration/spatialReferenceSystemOptions.json'
-  import facilityTypeOptions from '~/configuration/facilityTypeOptions.json'
-  import { fetchCollectionsWithCreatePermission, fetchCollectionById, fetchKeywordsByFacilityId } from '~/requests'
+  import { fetchCollectionsWithCreatePermission } from '~/requests'
   import { fetchItemById, createItem, updateItem } from '~/requests/items'
   import { parseAndValidateCoordinates, createGeometryFromCoordinates as createGeometry } from '~/utils/helpers'
   import buildGeoJsonLayer from '~/utils/build-geojson-layer'
@@ -638,10 +584,11 @@
   // State
   const collections = ref([])
   const collectionPermissions = ref([])
-  const keywordsGroups = ref([])
   const isSubmitting = ref(false)
-  const selectedKeywords = ref([])
-  const selectedFacilityType = ref('')
+  // Existing item keywords are preserved untouched on save (no UI control is
+  // shown for them anymore); this avoids silently wiping keyword data that
+  // was set through other means for pre-existing items.
+  const existingKeywords = ref([])
   const isLoading = ref(props.mode === 'edit') // Edit starts loading, create doesn't
 
   // Initialize formData with proper structure
@@ -716,16 +663,6 @@
     }
   })
 
-  const filteredKeywordsGroups = computed(() => {
-    if (!keywordsGroups.value || keywordsGroups.value.length === 0) return []
-    if (!selectedFacilityType.value) return []
-
-    return keywordsGroups.value.filter(group => {
-      return group.facility_type === selectedFacilityType.value ||
-        group.facility_type === 'general'
-    })
-  })
-
   const publicationDateDisplay = computed(() => {
     if (!formData.value?.properties?.publication_datetime) return ''
     try {
@@ -780,46 +717,6 @@
       collections.value = []
       collectionPermissions.value = []
     }
-  }
-
-  async function fetchKeywords() {
-    if (!formData.value?.collection) {
-      keywordsGroups.value = []
-      return
-    }
-
-    try {
-      const collection = await fetchCollectionById(formData.value.collection)
-      const keywordsLink = collection.links?.find(
-        item => item.rel === 'keywords' && item.id
-      )
-
-      if (!keywordsLink?.id) {
-        keywordsGroups.value = []
-        return
-      }
-
-      keywordsGroups.value = await fetchKeywordsByFacilityId(keywordsLink.id)
-    } catch (error) {
-      console.error('Error loading keywords:', error)
-      keywordsGroups.value = []
-    }
-  }
-
-  function handleCollectionChange() {
-    if (formData.value?.collection) {
-      fetchKeywords()
-    } else {
-      keywordsGroups.value = []
-    }
-  }
-
-  function handleFacilityTypeChange(value) {
-    selectedFacilityType.value = value
-    if (formData.value?.properties) {
-      formData.value.properties.facility_type = value
-    }
-    selectedKeywords.value = []
   }
 
   function applyPublicationDate() {
@@ -940,7 +837,7 @@
         links: [],
         properties: {
           ...formData.value.properties,
-          keywords: selectedKeywords.value,
+          keywords: existingKeywords.value,
         },
         assets: formData.value.assets || {},
       }
@@ -1053,17 +950,9 @@
           tempEndDate.value = null
         }
       
-        // Initialize keywords and facility type
+        // Preserve existing keywords on the item unchanged (no UI to edit them)
         if (item.properties?.keywords && Array.isArray(item.properties.keywords)) {
-          selectedKeywords.value = [...item.properties.keywords]
-        }
-        if (item.properties?.facility_type) {
-          selectedFacilityType.value = item.properties.facility_type
-        }
-      
-        // Fetch keywords for the collection
-        if (formData.value.collection) {
-          await fetchKeywords()
+          existingKeywords.value = [...item.properties.keywords]
         }
       } catch (err) {
         error.value = err.message || 'Failed to load item'

@@ -102,50 +102,6 @@
               </v-autocomplete>
             </v-col>
 
-            <!-- Keyword -->
-            <v-col
-              cols="12"
-              md="4"
-              class="filter-col"
-            >
-              <div class="text-subtitle-2 mb-2">
-                Keyword
-              </div>
-              <v-autocomplete
-                v-model="selectedKeyword"
-                :items="store.keywords"
-                item-title="nl_keyword"
-                item-value="id"
-                return-object
-                multiple
-                chips
-                prepend-inner-icon="mdi-magnify"
-                placeholder="Search keyword..."
-                variant="outlined"
-                density="compact"
-                clearable
-                hide-details
-                class="filter-autocomplete"
-                @update:model-value="handleKeywordChange"
-              >
-                <template #item="{ props: itemProps, item }">
-                  <v-list-item v-bind="itemProps">
-                    <template #prepend>
-                      <v-list-item-action>
-                        <v-icon v-if="item.raw.selected" color="primary">
-                          mdi-check
-                        </v-icon>
-                      </v-list-item-action>
-                    </template>
-                    <!-- Remove the v-list-item-title since item-title="nl_keyword" already handles it -->
-                  </v-list-item>
-                </template>
-                <template #selection="{ item }">
-                  {{ item.raw.nl_keyword || item.raw.en_keyword || item.raw.id }}
-                </template>
-              </v-autocomplete>
-            </v-col>
-
             <!-- Topic -->
             <v-col
               cols="12"
@@ -380,36 +336,6 @@
     }
   }
 
-  const selectedKeyword = computed({
-    get: () => {
-      const selected = store.keywords.filter(k => k.selected)
-      return selected
-    },
-    set: (value) => {
-      if (!value || value.length === 0) {
-        store.keywords = store.keywords.map(k => ({ ...k, selected: false }))
-      } else {
-        const selectedIds = value.map(v => v.id)
-        store.keywords = store.keywords.map(k => ({
-          ...k,
-          selected: selectedIds.includes(k.id)
-        }))
-      }
-    },
-  })
-
-  function handleKeywordChange(value) {
-    if (!value || value.length === 0) {
-      store.keywords = store.keywords.map(k => ({ ...k, selected: false }))
-    } else {
-      const selectedIds = value.map(v => v.id)
-      store.keywords = store.keywords.map(k => ({
-        ...k,
-        selected: selectedIds.includes(k.id)
-      }))
-    }
-  }
-
   const selectedTopic = computed({
     get: () => {
       const selected = store.topics.filter(t => t.selected)
@@ -461,7 +387,6 @@
   function clear () {
     store.q = ''
     store.collections = store.collections.map(c => ({ ...c, selected: false }))
-    store.keywords = store.keywords.map(k => ({ ...k, selected: false }))
     store.topics = store.topics.map(t => ({ ...t, selected: false }))
     store.startDate = undefined
     store.endDate = undefined
@@ -480,11 +405,6 @@
       store.collections = store.collections.map(c => 
         c.id === collectionId ? { ...c, selected: false } : c
       )
-    } else if (key.startsWith('keyword-')) {
-      const keywordId = key.replace('keyword-', '')
-      store.keywords = store.keywords.map(k => 
-        k.id === keywordId ? { ...k, selected: false } : k
-      )
     } else if (key.startsWith('topic-')) {
       const topicId = key.replace('topic-', '')
       store.topics = store.topics.map(t =>
@@ -501,7 +421,6 @@
   const FIELD_LABEL = {
     query: 'Search',
     collection: 'Domain',
-    keyword: 'Keyword',
     topic: 'Topic',
     startDate: 'Start date',
     endDate: 'End date',
@@ -540,17 +459,6 @@
       const selected = store.collections.filter(c => c.selected)
       selected.forEach(collection => {
         chips.push({ key: `collection-${collection.id}`, label: FIELD_LABEL.collection, value: collection.title })
-      })
-    }
-    
-    if (store.keywords && store.keywords.length > 0) {
-      const selectedKeywords = store.keywords.filter(k => k.selected)
-      selectedKeywords.forEach(keyword => {
-        chips.push({ 
-          key: `keyword-${keyword.id}`, 
-          label: FIELD_LABEL.keyword, 
-          value: keyword.nl_keyword || keyword.en_keyword || keyword.id 
-        })
       })
     }
     

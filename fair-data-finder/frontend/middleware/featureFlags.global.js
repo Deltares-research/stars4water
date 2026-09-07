@@ -1,7 +1,7 @@
 import { createError, defineNuxtRouteMiddleware } from '#app'
 import { useConfigStore } from '~/stores/config'
 
-const ADMIN_ROUTES = [ '/domains', '/groups', '/keywords' ]
+const ADMIN_ROUTES = [ '/domains', '/groups' ]
 
 export default defineNuxtRouteMiddleware((to) => {
   const config = useConfigStore()

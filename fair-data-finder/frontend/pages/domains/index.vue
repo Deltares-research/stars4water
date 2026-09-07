@@ -69,12 +69,6 @@
           </span>
         </template>
 
-        <!-- Keywords column -->
-        <!-- eslint-disable-next-line vue/valid-v-slot -->
-        <template #[`item.keywords`]="{ item }">
-          <span>{{ item.keywords || 'No keywords' }}</span>
-        </template>
-
         <!-- Edit column -->
         <!-- eslint-disable-next-line vue/valid-v-slot -->
         <template #[`item.edit`]="{ item }">
@@ -111,7 +105,6 @@
   import { ref, computed, onMounted, watch } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
   import { useDomainsStore } from '~/stores/domains'
-  import { fetchFacilities } from '~/requests/collections'
 
   // Component name for Vue linting
   defineOptions({
@@ -125,14 +118,10 @@
   // Store
   const store = useDomainsStore()
 
-  // Facilities for keywords lookup
-  const facilities = ref([])
-
   // Table configuration
   const headers = [
     { title: 'Title', key: 'title', sortable: true },
     { title: 'Description', key: 'description', sortable: true },
-    { title: 'Keywords', key: 'keywords', sortable: false },
     { title: '', key: 'edit', sortable: false },
     { title: '', key: 'delete', sortable: false }
   ]
@@ -153,19 +142,10 @@
   // Map collections to table format
   const mappedDomains = computed(() => {
     return store.collections.map(collection => {
-      // Find keywords facility
-      const keywordsLink = collection.links?.find(item => item.rel === 'keywords')
-      let keywordsName = 'No keywords'
-      if (keywordsLink?.id) {
-        const facility = facilities.value.find(f => f.id === keywordsLink.id)
-        keywordsName = facility?.name || 'No keywords'
-      }
-
       return {
         id: collection.id,
         title: collection.title || collection.id || '—',
         description: collection.description || '—',
-        keywords: keywordsName,
         // Keep original collection for edit/delete operations
         _original: collection
       }
@@ -207,15 +187,7 @@
 
   // Fetch items on mount
   onMounted(async () => {
-    await Promise.all([
-      store.fetchDomains(),
-      fetchFacilities().then(data => {
-        facilities.value = data || []
-      }).catch(err => {
-        console.error('Failed to fetch facilities:', err)
-        facilities.value = []
-      })
-    ])
+    await store.fetchDomains()
   })
 
   // Watch the route path to refresh data

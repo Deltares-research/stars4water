@@ -84,14 +84,6 @@
                     class="mb-4"
                   />
 
-                  <v-select
-                    v-model="formData.keywordsFacility"
-                    :items="facilityOptions"
-                    label="Keyword domains"
-                    variant="outlined"
-                    class="mb-4"
-                  />
-
                   <v-alert
                     v-if="submitError"
                     type="error"
@@ -204,7 +196,7 @@
   import { ref, computed, onMounted } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useNuxtApp } from '#app'
-  import { fetchCollectionById, updateCollection, fetchFacilities } from '~/requests/collections'
+  import { fetchCollectionById, updateCollection } from '~/requests/collections'
   import { fetchGroups } from '~/requests/groups'
 
   defineOptions({
@@ -221,9 +213,10 @@
   const formData = ref({
     title: '',
     description: '',
-    keywordsFacility: 'No keywords'
   })
-  const facilities = ref([])
+  // Existing collection links (e.g. keyword facility links) are preserved
+  // untouched on save; there is no UI to edit them anymore.
+  const existingLinks = ref([])
   const groups = ref([])
   const permissions = ref([])
   const isLoading = ref(true)
@@ -236,17 +229,6 @@
 
   // Roles
   const roles = ['collection_data_steward', 'data_producer']
-
-  // Computed
-  const facilityOptions = computed(() => {
-    const options = facilities.value
-      .filter(item => !!item.id)
-      .map(item => ({
-        value: item.id,
-        title: item.name
-      }))
-    return [{ value: 'No keywords', title: 'No keywords' }, ...options]
-  })
 
   // Methods
   function hasRole(groupId, role) {
@@ -339,16 +321,7 @@
             interval: [[]],
           },
         },
-        links: formData.value.keywordsFacility !== 'No keywords'
-          ? [
-            {
-              rel: 'keywords',
-              href: '/facilities/' + formData.value.keywordsFacility,
-              type: 'application/json',
-              id: formData.value.keywordsFacility,
-            },
-          ]
-          : [],
+        links: existingLinks.value,
       }
 
       await updateCollection(domainId, collectionData)
@@ -369,19 +342,15 @@
     error.value = null
 
     try {
-      const [collectionData, facilitiesData] = await Promise.all([
-        fetchCollectionById(domainId),
-        fetchFacilities()
-      ])
+      const collectionData = await fetchCollectionById(domainId)
 
       collection.value = collectionData
-      facilities.value = facilitiesData || []
+      existingLinks.value = collectionData.links || []
 
       // Populate form data
       formData.value = {
         title: collectionData.title || collectionData.id || '',
         description: collectionData.description || '',
-        keywordsFacility: collectionData.links?.find(item => item.rel === 'keywords')?.id || 'No keywords'
       }
 
       // Load groups and permissions for permissions tab

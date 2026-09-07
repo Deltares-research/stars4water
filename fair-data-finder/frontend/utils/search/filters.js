@@ -84,22 +84,6 @@ export function geometryFilter(bbox, { includeEmptyGeometry = false } = {}) {
 }
 
 /**
- * Keywords filter.
- * Expects keyword IDs and targets properties.keywords.id.
- *
- * ``properties.keywords`` is an array of keyword objects, so this uses the
- * CQL2 array operator ``a_overlaps`` (matches when the item carries any of
- * the selected keywords) rather than the scalar ``in`` operator.
- *
- * @param {string[]|number[]} keywords
- * @returns {{op:'a_overlaps', args:[{property:string}, (string[]|number[])]} | undefined}
- */
-export function keywordsFilter(keywords) {
-  if (!Array.isArray(keywords) || keywords.length === 0) return undefined
-  return { op: 'a_overlaps', args: [ { property: 'properties.keywords.id' }, keywords ] }
-}
-
-/**
  * Topics filter.
  * Expects topic IDs and targets deltares:topics property.
  * Uses the CQL2 array-overlap operator to match any selected topic.
@@ -161,11 +145,10 @@ export function dateFilter(startDate, endDate) {
  * Compose your final CQL2-JSON filter with the blocks you want.
  * Pass only the params you need; undefined blocks are ignored.
  */
-export function buildFilter({ q = '', bbox, includeEmptyGeometry = false, keywords = [], topics = [], startDate, endDate } = {}) {
+export function buildFilter({ q = '', bbox, includeEmptyGeometry = false, topics = [], startDate, endDate } = {}) {
   const filters = [
     geometryFilter(bbox, { includeEmptyGeometry }),
     textFilter(q),
-    keywordsFilter(keywords),
     topicsFilter(topics),
     dateFilter(startDate, endDate),
   ].filter(Boolean) // Remove undefined filters

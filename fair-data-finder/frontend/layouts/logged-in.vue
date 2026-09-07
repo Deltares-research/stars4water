@@ -21,12 +21,6 @@
         >
           Domains
         </v-tab>
-        <v-tab 
-          v-if="configStore.adminTabsEnabled && hasPermission('keyword:all')"
-          to="/keywords"
-        >
-          Keywords
-        </v-tab>
         <v-tab
           v-if="configStore.adminTabsEnabled && hasPermission('group:read')"
           to="/groups"
