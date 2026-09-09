@@ -126,6 +126,7 @@
                 clearable
                 hide-details
                 class="filter-autocomplete"
+                content-class="topic-menu-content"
                 @update:model-value="handleTopicChange"
               >
                 <template #item="{ props: itemProps, item }">
@@ -588,6 +589,20 @@
   white-space: nowrap;
   display: inline-block;
   max-width: 100%;
+}
+
+/* The Topic autocomplete's dropdown list is internally virtualized by
+   Vuetify (it has enough items to trigger virtual-scroll rendering), which
+   breaks the normal "match the activator width" sizing: the overlay's width
+   ends up unconstrained and grows to fill almost the whole viewport. Forcing
+   an explicit pixel width (rather than the min/max-width Vuetify sets by
+   default) avoids that broken auto-sizing. Sized to comfortably fit the
+   longest topic label (e.g. "Climatology, Meteorology, Atmosphere") plus the
+   "NN datasets" subtitle. This style must be global (not scoped) because
+   Vuetify teleports the dropdown content to the end of <body>, outside this
+   component's DOM. */
+:global(.topic-menu-content) {
+  width: 320px !important;
 }
 
 @media (min-width: 960px) {
