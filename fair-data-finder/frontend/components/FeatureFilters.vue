@@ -126,7 +126,7 @@
                 clearable
                 hide-details
                 class="filter-autocomplete"
-                content-class="topic-menu-content"
+                :menu-props="{ contentClass: 'v-autocomplete__content topic-menu-content' }"
                 @update:model-value="handleTopicChange"
               >
                 <template #item="{ props: itemProps, item }">
